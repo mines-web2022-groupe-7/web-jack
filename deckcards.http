@@ -1,0 +1,3 @@
+### GET request with a header
+GET https://www.deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1
+Accept: application/json
