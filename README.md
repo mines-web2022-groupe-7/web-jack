@@ -94,4 +94,164 @@ Copy the class in a file called `deck.js`
 
 8. Let's make it a working game !
 
+# Web-Jack 2.0
+
+## Why this solution is inefficient ?
+
+### Declarative vs Imperative
+
+> Imperative programming: telling the "machine" how to do something, and as a result what you want to happen will happen. 
+> Declarative programming: telling the "machine"1 what you would like to happen, and let the computer figure out how to do it.
+
+(source http://latentflip.com/imperative-vs-declarative)
+
+### State is hard to manage
+
+Imagine you'd have to hundle a button start a new game that would appear before the game. On the click of the button,
+you'd change it to the current layout. You'd have to keep track of the state of the game, and the state of the button and handle
+multiple **addEventListener** and remove them properly.
+
+### *createElement* is not readeable
+
+![img_1.png](img_1.png)
+
+erk...
+
+How about :
+
+```jsx
+let cardContainer = <div className="card">
+  <p>{card.value} of {card.suit}</p>
+  <img src={card.image} alt={card.code} />
+</div>
+```
+
+much easier to read, right ?
+
+### How to use external libraries ?
+
+We only used the **fetch** function from the browser. 
+What if we want to use a library like **moment** (to manipulate dates) or **lodash** (to manipulate everything else) ?
+
+Especially when dealing with front -> you might want to use specific libraries for beautiful components, animations, etc.
+### Performances
+
+Performance is a **big** deal in web development.
+
+With the current solution, their is no way to optimize what is rendered on the page.
+
+Exemple of the optimization we would like to *plug* in our code :
+
+* Minify JS / Minify CSS
+* Bundle optimization -> bundle all your JS in one file and/or not render unused code.
+* Lazy loading -> only load the code you need when you need it.
+* Caching -> cache the code you already loaded so you don't have to load it again.
+* Virtual DOM -> only render the part of the page that changed.
+* Image pre-processing
+* etc.
+
+### How to statistically test/improve your code ?
+
+* Typescript
+* jsdoc
+* jslint
+* tests integration/unit
+* sass / less
+
+## How to solve this ?
+
+### What is our level in frontend dev ?
+
+Let's have a look at :
+https://roadmap.sh/frontend
+
+### What about now ?
+
+Let's have a look at 'npm' / 'vite' / 'solidjs'
+
+From a new folder
+
+```bash
+npx degit solidjs/templates/js mines-jack-improved
+```
+
+We can launch a dev server :
+
+```bash
+npm run dev
+```
+
+* Let's copy our html in `src/App.js` (find the right place to put it)
+* Remove `App.module.css` and replace it with a `src/App.css` coming from your previous project.
+* (optional) Let's add a `src/deck.js` file with the class we created before.
+
+### Let's refactor with components
+
+```jsx
+let Button = ({ text, onClick }) => {
+  return <button class="btn" onClick={onClick}>{text}</button>
+}
+```
+
+To use it, add in the render from App.js :
+
+```jsx
+// ...
+<Button text="Draw" onClick={() => console.log("It works like magic")} />
+<Button text="Hit" onClick={() => console.log("It works like magic")} />
+// ...
+```
+
+Let's reflect in class
+
+### Let's work with state value
+
+
+
+```jsx
+import { createSignal } from 'solid-js'; 
+// ...
+
+function App() {
+  const [gameStarted, setGameStarted] = createSignal(false);
+  // ...
+}
+```
+
+Change the button to the following :
+
+```jsx
+        {gameStarted() &&
+          <>
+            <Button text="Hit" onClick={() => console.log("HIT")}/>
+            <Button text="Draw" onClick={() => console.log("DRAW")}/>
+          </>
+        }
+        {!gameStarted() &&
+          <Button text="Start Game" onClick={() => setGameStarted(true)} />
+        }
+```
+
+### How to fetch datas ?
+
+```jsx
+import { createResource } from 'solid-js';
+// ...
+let fetchCards = async () => {
+  let response = await fetch('https://deckofcardsapi.com/api/deck/new/draw/?count=2');
+  let data = await response.json();
+  return data.cards;
+}
+// ...
+let [cardsPlayer] = createResource(gameStarted, fetchCards, { initialValue: [] })
+// ...
+return //...
+   <For each={cardsPlayer()}>
+      {card => <div class="image">
+        <p>{ card.value } of { card.suit }</p>
+        <img src={card.image} />
+      </div>
+      }
+  </For>
+```
 
